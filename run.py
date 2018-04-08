@@ -37,17 +37,22 @@ def get_sum_case(test_case_file):
 
 def run_request():
     url = get_case(CaseFile, 1)[2]
-    params = get_case(CaseFile, 1)[4]
+    data = get_case(CaseFile, 1)[4]
+    req_data = json.loads(data)
+    print(req_data)
+    # data = {'questionId':'59c333037f1008310d8b4567'}
     header = {"Wxid": "o79aixECshqXft8Cck5fMC7LdYZs",
               "Channel": "wx_anxinjiankang",
               "User-Agent": "micromessenger"}
 
-    print(url, params)
+    print(url, data)
 
-    rsp = requests.get(url=url, params=params, headers=header)
+    rsp = requests.post(url=url, data=req_data, headers=header)
     rsp_json = json.loads(rsp.text)
 
-    print(rsp_json)
+    print (rsp.url)
+    print(rsp.text)
+    print(rsp.json())
 
 
 run_request()
