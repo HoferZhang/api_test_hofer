@@ -14,7 +14,9 @@ ResultTitleRow = \
     ["id", "Description", "Request_URL", "Method", "Request_Data", "ExpectedRspCode", "ActualRspCode", "TestResult",
      "RspMeessage"]
 CurrentTime = time.strftime('%Y%m%d_%H%M%S', time.localtime(time.time()))
-ResultFile = "Result_" + CurrentTime + ".xls"
+
+ResultFile = "Result.xls"
+# ResultFile = "Result_" + CurrentTime + ".xls"
 
 
 def get_case(test_case_file, case_no):
@@ -50,7 +52,7 @@ def run_request(caseId, case, result):
 
     if code == case[5]:
         case.append("pass")
-        case.append("null")
+        case.append("")
     else:
         case.append("fail")
         case.append(rsp_json["msg"])
