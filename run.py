@@ -10,13 +10,15 @@ import xlwt
 from xlutils.copy import copy
 
 CaseFile = "TestCase/case.xlsx"
+
 ResultTitleRow = \
-    ["id", "Description", "Request_URL", "Method", "Request_Data", "ExpectedRspCode", "ActualRspCode", "TestResult",
+    ["id", "Description", u"请求_URL", u"Method", u"请求参数", u"期望Code", u"实际Code", u"结果",
      "RspMeessage"]
+
 CurrentTime = time.strftime('%Y%m%d_%H%M%S', time.localtime(time.time()))
 
-ResultFile = "Result.xls"
-# ResultFile = "Result_" + CurrentTime + ".xls"
+# ResultFile = "Result.xls"
+ResultFile = "Result_" + CurrentTime + ".xls"
 
 
 def get_case(test_case_file, case_no):
@@ -41,21 +43,26 @@ def run_request(caseId, case, result):
     els_data = case[4]
     data_json = json.loads(els_data)
 
-    header = {"Wxid": "o79aixECshqXft8Cck5fMC7LdYZs",
-              "Channel": "wx_anxinjiankang",
-              "User-Agent": "micromessenger"}
-
-    rsp = requests.post(url=url, data=data_json, headers=header)
+    # header = {"Wxid": "o79aixECshqXft8Cck5fMC7LdYZs",
+    #           "Channel": "wx_anxinjiankang",
+    #           "User-Agent": "micromessenger"}
+    # print(data_json)
+    rsp = requests.post(url=url, params=data_json)
     rsp_json = json.loads(rsp.text)
-    code = rsp_json["code"]
+    code = rsp_json["resCode"]
     case.append(code)
+    print(str(caseId)+":"+str(code))
+    # print(code)
 
     if code == case[5]:
         case.append("pass")
-        case.append("")
+        case.append(rsp_json["resDesc"])
+        case.append(rsp.text)
     else:
         case.append("fail")
-        case.append(rsp_json["msg"])
+        case.append(rsp_json["resDesc"])
+        case.append(rsp.text)
+        # print(rsp_json["resDesc"])
 
     save_to_file(case, result)
 
@@ -64,7 +71,7 @@ def save_to_file(rowlist, savefilename):
     old_excel = xlrd.open_workbook(ResultFile, formatting_info=True)
     old_sheet = old_excel.sheet_by_index(0)
     row = old_sheet.nrows
-    print(row)
+    # print(row)
 
     new_excel = copy(old_excel)
     new_sheet = new_excel.get_sheet(0)
