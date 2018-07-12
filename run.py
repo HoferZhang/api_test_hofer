@@ -3,21 +3,14 @@
 import requests
 import json
 
-
 import time
 import xlrd
 import xlwt
 from xlutils.copy import copy
 
 CaseFile = "TestCase/case.xlsx"
-
-ResultTitleRow = \
-    ["id", "Description", u"请求_URL", u"Method", u"请求参数", u"期望Code", u"实际Code", u"结果",
-     "RspMeessage"]
-
 CurrentTime = time.strftime('%Y%m%d_%H%M%S', time.localtime(time.time()))
-
-# ResultFile = "Result.xls"
+ResultTitle = ["id", u'描述', u'请求地址', u'请求方式', u'请求参数', u'期望响应码', u'实际响应吗', u'测试结果', u'返回信息']
 ResultFile = "Result_" + CurrentTime + ".xls"
 
 
@@ -38,8 +31,8 @@ def get_case(test_case_file, case_no):
 
 
 # 执行请求
-def run_request(caseId, case_file, result_file):
-    result = get_case(case_file, caseId)
+def run_request(case_id, case_file, result_file):
+    result = get_case(case_file, case_id)
 
     url = result[2]
     els_data = result[4]
@@ -47,16 +40,16 @@ def run_request(caseId, case_file, result_file):
 
     # 根据请求方式执行请求
     if result[3] == 'POST':
-        result = request_post(case_file, caseId, url, data_json)
+        result = request_post(case_file, case_id, url, data_json)
         save_to_file(result, result_file)
     elif result[3] == 'GET':
-        result = request_get(case_file, caseId, url, data_json)
+        result = request_get(case_file, case_id, url, data_json)
         save_to_file(result, result_file)
     else:
         result.append('')
         result.append('no run')
         result.append(u'请求方式不支持')
-        print(str(caseId) + '.' + str(result[3]) + ':' + '请求方式不支持')
+        print(str(case_id) + '.' + str(result[3]) + ':' + '请求方式不支持')
         save_to_file(result, result_file)
 
 
@@ -82,7 +75,7 @@ def request_post(case_file, case_id, url, data):
     return result
 
 
-# Get 请求
+# GET 请求
 def request_get(case_file, case_id, url, data):
     result = get_case(case_file, case_id)
 
@@ -144,4 +137,4 @@ def run(caseFile, result, result_title):
         run_request(i + 1, caseFile, result)
 
 
-run(CaseFile, ResultFile, ResultTitleRow)
+run(CaseFile, ResultFile, ResultTitle)
