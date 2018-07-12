@@ -21,6 +21,7 @@ CurrentTime = time.strftime('%Y%m%d_%H%M%S', time.localtime(time.time()))
 ResultFile = "Result_" + CurrentTime + ".xls"
 
 
+# 获取用例
 def get_case(test_case_file, case_no):
     testCase = xlrd.open_workbook(test_case_file)
     sheet = testCase.sheet_by_index(0)
@@ -36,42 +37,78 @@ def get_case(test_case_file, case_no):
     return case
 
 
-def run_request(caseId, case, result):
-    case = get_case(case, caseId)
+# 执行请求
+def run_request(caseId, case_file, result_file):
+    result = get_case(case_file, caseId)
 
-    url = case[2]
-    els_data = case[4]
+    url = result[2]
+    els_data = result[4]
     data_json = json.loads(els_data)
 
-    # header = {"Wxid": "o79aixECshqXft8Cck5fMC7LdYZs",
-    #           "Channel": "wx_anxinjiankang",
-    #           "User-Agent": "micromessenger"}
-    # print(data_json)
-    rsp = requests.post(url=url, params=data_json)
-    rsp_json = json.loads(rsp.text)
-    code = rsp_json["resCode"]
-    case.append(code)
-    print(str(caseId)+":"+str(code))
-    # print(code)
-
-    if code == case[5]:
-        case.append("pass")
-        case.append(rsp_json["resDesc"])
-        case.append(rsp.text)
+    # 根据请求方式执行请求
+    if result[3] == 'POST':
+        result = request_post(case_file, caseId, url, data_json)
+        save_to_file(result, result_file)
+    elif result[3] == 'GET':
+        result = request_get(case_file, caseId, url, data_json)
+        save_to_file(result, result_file)
     else:
-        case.append("fail")
-        case.append(rsp_json["resDesc"])
-        case.append(rsp.text)
-        # print(rsp_json["resDesc"])
+        result.append('')
+        result.append('no run')
+        result.append(u'请求方式不支持')
+        print(str(caseId) + '.' + str(result[3]) + ':' + '请求方式不支持')
+        save_to_file(result, result_file)
 
-    save_to_file(case, result)
+
+# POST 请求
+def request_post(case_file, case_id, url, data):
+    result = get_case(case_file, case_id)
+
+    rsp = requests.post(url=url, data=data)
+    rsp_json = json.loads(rsp.text)
+
+    code = rsp_json["resCode"]
+    result.append(code)
+    print(str(case_id) + "." + str(result[3]) + ':' + str(code))
+
+    if code == result[5]:
+        result.append("pass")
+        result.append(rsp_json["resDesc"])
+        result.append(rsp.text)
+    else:
+        result.append("fail")
+        result.append(rsp_json["resDesc"])
+        result.append(rsp.text)
+    return result
 
 
+# Get 请求
+def request_get(case_file, case_id, url, data):
+    result = get_case(case_file, case_id)
+
+    rsp = requests.get(url=url, params=data)
+    rsp_json = json.loads(rsp.text)
+
+    code = rsp_json["resCode"]
+    result.append(code)
+    print(str(case_id) + "." + str(result[3]) + ':' + str(code))
+
+    if code == result[5]:
+        result.append("pass")
+        result.append(rsp_json["resDesc"])
+        result.append(rsp.text)
+    else:
+        result.append("fail")
+        result.append(rsp_json["resDesc"])
+        result.append(rsp.text)
+    return result
+
+
+# 保存结果
 def save_to_file(rowlist, savefilename):
     old_excel = xlrd.open_workbook(ResultFile, formatting_info=True)
     old_sheet = old_excel.sheet_by_index(0)
     row = old_sheet.nrows
-    # print(row)
 
     new_excel = copy(old_excel)
     new_sheet = new_excel.get_sheet(0)
@@ -82,6 +119,7 @@ def save_to_file(rowlist, savefilename):
     new_excel.save(savefilename)
 
 
+# 创建结果文件
 def new_xls(filename, title):
     w = xlwt.Workbook()
     ws = w.add_sheet(u'Sheet1')
@@ -92,18 +130,18 @@ def new_xls(filename, title):
     w.save(filename)
 
 
+# 获取用例总数
 def get_total_row(basic_excel):
     excel = xlrd.open_workbook(basic_excel)
     sheet = excel.sheet_by_index(0)
     return sheet.nrows
 
 
-def run(case, result, result_title):
+# 读取用例文件，循环执行
+def run(caseFile, result, result_title):
     new_xls(result, result_title)
-    for i in range(get_total_row(case) - 1):
-        run_request(i + 1, case, result)
+    for i in range(get_total_row(caseFile) - 1):
+        run_request(i + 1, caseFile, result)
 
 
-# run_request(1, CaseFile, ResultFile)
-# run_request(2, CaseFile, ResultFile)
 run(CaseFile, ResultFile, ResultTitleRow)
